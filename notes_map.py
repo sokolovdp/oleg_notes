@@ -38,7 +38,7 @@ def draw_graph(graph, nodes_dict, output_file):
     plot = init_plot_frame()
 
     nodes_to_draw = list(nodes_dict.keys())
-    nodes_sizes = [graph.node[tag]['weight']*500 for tag in nodes_to_draw]
+    nodes_sizes = [graph.node[tag]['weight'] * 500 for tag in nodes_to_draw]
     subgraph = graph.subgraph(nodes_to_draw)
     nx.draw_networkx(subgraph, pos=nx.spring_layout(graph), node_size=nodes_sizes, with_labels=True,
                      alpha=0.8, nodelist=nodes_to_draw, node_color='r')
@@ -68,10 +68,11 @@ def main(notes_file_name: "str"):
         len(all_tags),
         len(tags_dict),
         MAX_POPULAR_TAGS,
-        ', '.join( [tag + ':' + str(weight) for tag, weight in most_popular_tags] )))
+        ', '.join([tag + ':' + str(weight) for tag, weight in most_popular_tags])))
 
     tag_graph = build_graph(tags_dict, list_of_notes)
-    print("полный граф тэгов имеет {} вершин и {} ребер".format(tag_graph.number_of_nodes(), tag_graph.number_of_edges()))
+    print(
+        "полный граф тэгов имеет {} вершин и {} ребер".format(tag_graph.number_of_nodes(), tag_graph.number_of_edges()))
 
     filename = 'full_graph.png'
     draw_graph(tag_graph, tags_dict, filename)
@@ -84,7 +85,6 @@ def main(notes_file_name: "str"):
 
     tag_analysis(tag_graph, 'ангина')
     tag_analysis(tag_graph, 'фото')
-
 
 
 def check_notes_file(file_name):
