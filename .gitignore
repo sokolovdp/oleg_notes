@@ -1,0 +1,10 @@
+# folders
+sample/
+.idea/
+
+# files
+*.iml
+*.txt
+*.pdf
+*.png
+*.csv

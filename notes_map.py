@@ -1,3 +1,6 @@
+#!/bin/env python3
+# -*- coding: utf-8 -*-
+
 import sys
 import argparse
 import os
@@ -6,6 +9,7 @@ from itertools import combinations
 
 import networkx as nx
 import matplotlib.pyplot as plt
+
 
 MAX_POPULAR_TAGS = 10
 
@@ -88,7 +92,7 @@ def main(notes_file_name: "str"):
 
 
 def check_notes_file(file_name):
-    if os.path.exists(file_name) and file_name.endswith('.csv'):
+    if os.path.exists(file_name):
         return file_name
     raise argparse.ArgumentTypeError('invalid notes file {}'.format(file_name))
 
