@@ -1,5 +1,5 @@
 # **notes_map**
-analyses of text file with notes and tags, builds graph of tags
+analyses text file with notes and tags, builds graph of tags and their relations
 
 # Usage:
 ```
@@ -20,5 +20,5 @@ optional arguments:
   --subgraph
   --tags KEY_TAGS
 ```
-# Requirements
+# Requirements:
 Python 3.6, packages: networkx 1.11, matplotlib 2.0.2
