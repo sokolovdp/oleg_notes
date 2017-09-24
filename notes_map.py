@@ -6,16 +6,32 @@ import argparse
 import os
 from collections import Counter
 from itertools import combinations
+import re
 
 import networkx as nx
 import matplotlib.pyplot as plt
 
+TAG_SYMBOL = '@'
+tag_pattern = r'(?P<tag>{}\w+)'.format(TAG_SYMBOL)
+tag_formula = re.compile(tag_pattern)
 
-MAX_POPULAR_TAGS = 10
+graph_file_name = 'full_graph.png'
+subgraph_file_name = 'top_tags_graph.png'
 
 
-def parse_note_to_list_of_tags(line: "str") -> "list":
-    return [tag.strip() for tag in line.strip().strip('"').split(',')]
+def parse_note_line(line: "str") -> "dict":
+    tags = [tag.replace(TAG_SYMBOL, '') for tag in tag_formula.findall(line)]
+    note = {'tags': tags, "text": line}
+    return note
+    # return [tag.strip() for tag in line.strip().strip('"').split(',')]     # test CSV file
+
+
+def read_note_file(file_name: "str") -> ("list", "list"):
+    with open(file_name, 'r', encoding='utf-8') as notes_file:
+        raw_lines = filter(lambda l: len(l) > 1, notes_file.readlines())
+    notes = [parse_note_line(line.strip().lower()) for line in raw_lines]
+    tags = sum([note['tags'] for note in notes], [])
+    return notes, tags
 
 
 def build_graph(nodes: "dict", clusters_of_edges: "list") -> "nx.Graph":
@@ -59,36 +75,32 @@ def tag_analysis(graph, tag):
         print("тэг '{}' имеет вес {} связан с тэгами: {}".format(tag, weight, ','.join(neighbors)))
 
 
-def main(notes_file_name: "str"):
-    with open(notes_file_name, 'r', encoding='utf-8') as notes_file:
-        list_of_notes = list(map(parse_note_to_list_of_tags, notes_file.readlines()))
-
-    all_tags = sum(list_of_notes, [])
+def main(**kwargs):
+    all_notes, all_tags = read_note_file(kwargs['notes_file'])
     tags_dict = Counter(all_tags)
-    most_popular_tags = tags_dict.most_common(MAX_POPULAR_TAGS)
+    most_popular_tags = tags_dict.most_common(kwargs['max_top_tags'])
 
     print('{} заметок, {} тэгов, {} уникальных тэгов, {} самых популярных тэгов: {}'.format(
-        len(list_of_notes),
+        len(all_notes),
         len(all_tags),
         len(tags_dict),
-        MAX_POPULAR_TAGS,
+        kwargs['max_top_tags'],
         ', '.join([tag + ':' + str(weight) for tag, weight in most_popular_tags])))
 
-    tag_graph = build_graph(tags_dict, list_of_notes)
-    print(
-        "полный граф тэгов имеет {} вершин и {} ребер".format(tag_graph.number_of_nodes(), tag_graph.number_of_edges()))
+    tag_graph = build_graph(tags_dict, [note['tags'] for note in all_notes])
+    print("граф тэгов имеет {} вершин и {} ребер".format(tag_graph.number_of_nodes(), tag_graph.number_of_edges()))
 
-    filename = 'full_graph.png'
-    draw_graph(tag_graph, tags_dict, filename)
-    print("изображение полного графа сохранено в файле: '{}'".format(filename))
+    if kwargs['draw_graph']:
+        draw_graph(tag_graph, tags_dict, graph_file_name)
+        print("изображение полного графа сохранено в файле: '{}'".format(graph_file_name))
 
-    filename = 'popular_graph.png'
-    nodes = {tag: tags_dict[tag] for tag, _ in most_popular_tags}
-    draw_graph(tag_graph, nodes, filename)
-    print("изображение графа связи самых популярных тэгов сохранено в файле: '{}'".format(filename))
+    if kwargs['draw_subgraph']:
+        nodes = {tag: tags_dict[tag] for tag, _ in most_popular_tags}
+        draw_graph(tag_graph, nodes, subgraph_file_name)
+        print("изображение графа связи самых популярных тэгов сохранено в файле: '{}'".format(subgraph_file_name))
 
-    tag_analysis(tag_graph, 'ангина')
-    tag_analysis(tag_graph, 'фото')
+    for tag in kwargs['key_tags'].split(','):
+        tag_analysis(tag_graph, tag)
 
 
 def check_notes_file(file_name):
@@ -98,8 +110,14 @@ def check_notes_file(file_name):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='graph analysis of notes')
-    parser.add_argument("notes_file", type=check_notes_file, help="file with notes")
-    args = parser.parse_args(sys.argv[1:])
+    ap = argparse.ArgumentParser(description='graph analysis of text file with notes and tags')
+    ap.add_argument("notes_file", type=check_notes_file, help="file with notes")
+    ap.add_argument("--maxtop", dest="max_top_tags", action="store", type=int, default=10,
+                    help="number of popular tags, default=10")
+    ap.add_argument("--size", dest="pic_size", action="store", default='100x80', help="graph size, default=100x80")
+    ap.add_argument('--graph', dest='draw_graph', action='store_true')
+    ap.add_argument('--subgraph', dest='draw_subgraph', action='store_true')
+    ap.add_argument('--tags', dest='key_tags', action='store', default=[])
+    args = ap.parse_args(sys.argv[1:])
 
-    main(args.notes_file)
+    main(**vars(args))
