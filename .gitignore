@@ -3,8 +3,10 @@ sample/
 .idea/
 
 # files
-*.iml
 *.txt
 *.pdf
 *.png
 *.csv
+
+# but not these
+!requirements.txt
