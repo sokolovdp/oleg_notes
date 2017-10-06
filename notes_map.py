@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import sys
@@ -54,25 +54,36 @@ def init_plot_frame():
     return plt
 
 
-def draw_graph(graph, nodes_dict, output_file):
+def draw_graph(graph: "nx.Graph", nodes_dict, output_file):
     plot = init_plot_frame()
-
     nodes_to_draw = list(nodes_dict.keys())
     nodes_sizes = [graph.node[tag]['weight'] * 500 for tag in nodes_to_draw]
     subgraph = graph.subgraph(nodes_to_draw)
-    nx.draw_networkx(subgraph, pos=nx.spring_layout(graph), node_size=nodes_sizes, with_labels=True,
+    nx.draw_networkx(subgraph, node_size=nodes_sizes, with_labels=True,  # pos=nx.spring_layout(graph),
                      alpha=0.8, nodelist=nodes_to_draw, node_color='r')
     plot.savefig(output_file)
 
 
-def tag_analysis(graph, tag):
+def tag_analysis(graph: "nx.Graph", tag: "str"):
     try:
         weight = graph.node[tag]['weight']
         neighbors = graph.neighbors(tag)
     except KeyError:
-        print("error: invalid tag '{}'".format(tag))
+        print("ошибка: несуществующий тэг '{}'".format(tag))
     else:
         print("тэг '{}' имеет вес {} связан с тэгами: {}".format(tag, weight, ','.join(neighbors)))
+
+
+def routes(graph: "nx.Graph", nodes: "list"):
+    start_node = nodes[0]
+    for end_node in nodes[1:]:
+        try:
+            nodes_in_path = nx.shortest_path(graph, source=start_node, target=end_node)
+        except nx.exception.NetworkXNoPath:
+            print("тэг {} не имеет ассоциаций с тэгом {} ".format(start_node, end_node))
+        else:
+            inner_nodes = nodes_in_path[1:-1]
+            print("тэг {} и тэг {} имеют ассоциации: {}".format(start_node, end_node, '-'.join(inner_nodes)))
 
 
 def main(**kwargs):
@@ -102,22 +113,32 @@ def main(**kwargs):
     for tag in kwargs['key_tags'].split(','):
         tag_analysis(tag_graph, tag)
 
+    if kwargs['routes']:
+        nodes = kwargs['routes'].split(',')
+        if len(nodes) > 1:
+            routes(tag_graph, nodes)
+        else:
+            print("ошибка: должно быть указано не менее 2-х тэгов '{}'".format(kwargs['routes']))
+
 
 def check_notes_file(file_name):
     if os.path.exists(file_name):
         return file_name
-    raise argparse.ArgumentTypeError('invalid notes file {}'.format(file_name))
+    raise argparse.ArgumentTypeError('ошибка файла {}'.format(file_name))
 
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='graph analysis of text file with notes and tags')
     ap.add_argument("notes_file", type=check_notes_file, help="file with notes")
-    ap.add_argument("--maxtop", dest="max_top_tags", action="store", type=int, default=10,
-                    help="number of popular tags, default=10")
+    ap.add_argument("--maxtop", dest="max_top_tags", action="store", type=int, default=7,
+                    help="number of popular tags, default=7")
     ap.add_argument("--size", dest="pic_size", action="store", default='100x80', help="graph size, default=100x80")
     ap.add_argument('--graph', dest='draw_graph', action='store_true')
     ap.add_argument('--subgraph', dest='draw_subgraph', action='store_true')
-    ap.add_argument('--tags', dest='key_tags', action='store', default=[])
+    ap.add_argument('--tags', dest='key_tags', action='store', default=[],
+                    help="list of tags to analyse: tag1,tag2,tag3")
+    ap.add_argument('--routes', dest='routes', action='store', default=[],
+                    help="list of tags to build routes from tag1: tag1,tag2,tag3")
     args = ap.parse_args(sys.argv[1:])
 
     main(**vars(args))
