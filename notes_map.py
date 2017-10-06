@@ -110,8 +110,9 @@ def main(**kwargs):
         draw_graph(tag_graph, nodes, subgraph_file_name)
         print("изображение графа связи самых популярных тэгов сохранено в файле: '{}'".format(subgraph_file_name))
 
-    for tag in kwargs['key_tags'].split(','):
-        tag_analysis(tag_graph, tag)
+    if kwargs['key_tags']:
+        for tag in kwargs['key_tags'].split(','):
+            tag_analysis(tag_graph, tag)
 
     if kwargs['routes']:
         nodes = kwargs['routes'].split(',')
