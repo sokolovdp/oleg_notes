@@ -23,10 +23,20 @@ optional arguments:
   --routes ROUTES       list of tags to build routes from tag1: tag1,tag2,tag3
 
 ```
-# Sample command:
+# Sample command and output:
 ```
 payton notes_map.py sample.txt --tags lorem,шрифт,html --maxtop=3  --routes lorem,html
 ```
+
+```text
+5 заметок, 10 тэгов, 8 уникальных тэгов, 3 самых популярных тэгов: lorem:2, качество:2, шрифт:1
+граф тэгов имеет 8 вершин и 6 ребер
+тэг 'lorem' имеет вес 2 связан с тэгами: шрифт,пример,качество
+тэг 'шрифт' имеет вес 1 связан с тэгами: lorem
+тэг 'html' имеет вес 1 связан с тэгами: качество
+тэг lorem и тэг html имеют ассоциации: качество
+```
+
 
 # Requirements:
 Python 3.6, packages: networkx 1.11, matplotlib 2.0.2
